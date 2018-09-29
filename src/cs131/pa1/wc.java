@@ -35,7 +35,7 @@ public class wc extends SequentialFilter {
 					for (int i = 0; i < input.poll().length(); i++) {
 						if (take.charAt(i) == '\n') {
 							LC++;
-						} else if (take.charAt(i) == ' ') {
+						} else if (Character.isWhitespace(take.charAt(i))) {
 							WC++;
 						} else {
 							CC++;
