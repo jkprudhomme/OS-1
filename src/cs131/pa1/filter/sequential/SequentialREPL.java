@@ -43,5 +43,9 @@ public class SequentialREPL {
 		System.out.print(Message.GOODBYE);
 		
 	}
+		public static void setWorkingDirectory(String s) {
+		currentWorkingDirectory = s;
+	}
+
 
 }
