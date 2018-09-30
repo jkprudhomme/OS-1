@@ -9,86 +9,79 @@ import java.nio.file.*;
 import java.util.LinkedList;
 import java.util.Scanner;
 
+import cs131.pa1.filter.Filter;
 import cs131.pa1.filter.Message;
 
 public class write extends SequentialFilter {
 	private String line;
-	
-	public write(String line){
+
+	public write(String line) {
 		this.line = line;
 	}
-	
+
 	@Override
-	public void process(){
+	public void process() {
 		/*
 		 * creates Path using line and writes using input
 		 */
-		Path togo = Paths.get(SequentialREPL.currentWorkingDirectory + "\\" + line.replaceAll("> ", "").trim());
-		String send = input.poll();
-		if (Files.exists(togo)) {
-			writeTo(togo.toString(), send);
-		} else {
-			create(togo.toString(), send);
+
+		// Path togo = Paths.get(SequentialREPL.currentWorkingDirectory + FILE_SEPARATOR
+		// + line.replaceAll("> ", "").trim());
+		// String send = input.poll();
+		// if (Files.exists(togo)) {
+		// writeTo(togo.toString(), send);
+		// } else {
+		// create(togo.toString(), send);
+		// }
+		while (!input.isEmpty()) {
+			String send = input.poll();
+			File fileNeeded = new File(
+					SequentialREPL.currentWorkingDirectory + FILE_SEPARATOR + line.replaceAll("> ", "").trim());
+			boolean exists = fileNeeded.exists();
+			if (exists) {
+				writeTo(fileNeeded, send);
+			} else {
+				create(fileNeeded, send);
+			}
 		}
-//		return null; // no ouput
+		// return null; // no ouput
 	}
 
-	private static void create(String address, String content) {
+	private static void create(File address, String content) {
 		/*
 		 * For a new file
 		 */
-		FileWriter writer = null;
+		FileWriter fileWriter = null;
 		try {
-			writer = new FileWriter(address);
+			address.createNewFile();
+			fileWriter = new FileWriter(address);
+			fileWriter.write(content);
+			fileWriter.flush();
+			fileWriter.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		PrintWriter printWriter = new PrintWriter(writer);
-		printWriter.print(content);
-		printWriter.close();
 	}
 
-	private static void writeTo(String putter, String content) {
+	private static void writeTo(File putter, String content) {
+
 		/*
 		 * for overwriting a file
 		 */
-		PrintWriter printWriter = null;
 		try {
-			printWriter = new PrintWriter(putter);
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
+			FileWriter fileWriter = new FileWriter(putter);
+			fileWriter.write(content);
+			fileWriter.flush();
+			fileWriter.close();
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		printWriter.print(content);
-		printWriter.close();
 	}
 
 	@Override
 	protected String processLine(String line) {
 		// TODO Auto-generated method stub
 		return null;
-	}
-
-}
-		PrintWriter printWriter = new PrintWriter(writer);
-		printWriter.print(content);
-		printWriter.close();
-	}
-
-	private static void write(String putter, String content) {
-		/*
-		 * for overwriting a file
-		 */
-		PrintWriter printWriter = null;
-		try {
-			printWriter = new PrintWriter(putter);
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		printWriter.print(content);
-		printWriter.close();
 	}
 
 }
