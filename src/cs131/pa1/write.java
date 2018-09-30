@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.*;
 import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Scanner;
 
 import cs131.pa1.filter.Filter;
@@ -33,16 +34,18 @@ public class write extends SequentialFilter {
 		// } else {
 		// create(togo.toString(), send);
 		// }
+		String send ="";
 		while (!input.isEmpty()) {
-			String send = input.poll();
-			File fileNeeded = new File(
-					SequentialREPL.currentWorkingDirectory + FILE_SEPARATOR + line.replaceAll("> ", "").trim());
-			boolean exists = fileNeeded.exists();
-			if (exists) {
-				writeTo(fileNeeded, send);
-			} else {
-				create(fileNeeded, send);
-			}
+			send+=input.poll()+"\n";
+		}
+		send=send.substring(0, send.length()-1);
+		File fileNeeded = new File(
+				SequentialREPL.currentWorkingDirectory + FILE_SEPARATOR + line.replaceAll("> ", "").trim());
+		boolean exists = fileNeeded.exists();
+		if (exists) {
+			writeTo(fileNeeded, send);
+		} else {
+			create(fileNeeded, send);
 		}
 		// return null; // no ouput
 	}
