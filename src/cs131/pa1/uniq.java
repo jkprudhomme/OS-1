@@ -20,12 +20,11 @@ public class uniq extends SequentialFilter {
 			if (input.isEmpty()) {
 				System.out.print(Message.REQUIRES_INPUT.with_parameter(line));
 			} else {
-				String disAttach[]=input.poll().split("\r\n");
-				for (int i=0; i<disAttach.length;i++){
-					if (!output.contains(disAttach[i])) {
-						output.add(disAttach[i]);
-					}
-				}
+				String[] disAttach=input.poll().split("\n");
+				Set<String> hashee = new HashSet<String>(); //create a new hash set
+				List<String> disAttachToList=Arrays.asList(disAttach); //convert disAttach to a list
+				hashee.addAll(disAttachToList); //add disAttach, the list, into the hash set
+				output.add(hashee.toString()); //put hash set content into output
 			}
 		} else {
 			System.out.print(Message.INVALID_PARAMETER.with_parameter(line));
