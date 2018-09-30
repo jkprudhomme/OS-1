@@ -26,7 +26,8 @@ public class cat extends SequentialFilter {
 			 * add the content of the file to the output
 			 */
 			try {
-				output.add(new String(Files.readAllBytes(togo)));
+				String content = new String(Files.readAllBytes(togo)).replaceFirst("\\s++$", "");
+				output.add(content);
 			} catch (IOException e) {
 			}
 		} else {
