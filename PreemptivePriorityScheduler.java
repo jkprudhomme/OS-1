@@ -13,7 +13,8 @@ public class PreemptivePriorityScheduler extends Tunnel {
 	private Collection<Tunnel> tunnels;
 	private PriorityQueue<Integer> waiting;
 	private HashMap<Vehicle, Tunnel> inside;
-	private Boolean amb = false; 
+	private Set<Tunnel> hasAmb;
+	private HashMap<Tunnel,ArrayList<Vehicle>> matches;
 	protected final Lock lock = new ReentrantLock();
 	protected final Condition isTopPriority = lock.newCondition();
 	protected final Condition thereIsAnAmbulance = lock.newCondition();
@@ -23,6 +24,11 @@ public class PreemptivePriorityScheduler extends Tunnel {
 		this.tunnels = tunnels;
 		waiting = new PriorityQueue<Integer>(Collections.reverseOrder());
 		inside = new HashMap<Vehicle, Tunnel>();
+		hasAmb = new HashSet<Tunnel>();
+		matches = new HashMap<Tunnel,ArrayList<Vehicle>>();
+		for(Tunnel tunnel: tunnels){
+			matches.put(tunnel, new ArrayList<Vehicle>());
+		}
 	}
 
 	@Override
@@ -30,15 +36,8 @@ public class PreemptivePriorityScheduler extends Tunnel {
 		lock.lock();
 		waiting.add(vehicle.getPriority());
 		try {
-			while (tunnelsfull(vehicle) || vehicle.getPriority() < waiting.peek()) {
+			while ((vehicle.getPriority() < waiting.peek())||tunnelsfull(vehicle)) {
 				isTopPriority.await();
-			}
-			if (vehicle instanceof Ambulance) {
-				amb = true;//same problem, is this shared among the vehicles in the tunnel or not is not clear
-			} else {
-				while (amb) {
-					thereIsAnAmbulance.await();
-				}
 			}
 			waiting.remove(vehicle.getPriority());
 		} catch (InterruptedException e) {
@@ -51,11 +50,27 @@ public class PreemptivePriorityScheduler extends Tunnel {
 	}
 
 	private boolean tunnelsfull(Vehicle vehicle) {
-		for (Tunnel tunnel : tunnels) {
-			if (tunnel.tryToEnter(vehicle)) {
-				inside.put(vehicle, tunnel);
-				System.out.println(vehicle.getName() + " is in " + tunnel.getName());
-				return false;
+		if(vehicle instanceof Ambulance){
+			for (Tunnel tunnel : tunnels) {
+				if (!hasAmb.contains(tunnel)) {
+					hasAmb.add(tunnel);
+					inside.put(vehicle, tunnel);
+					for(Vehicle normal: matches.get(inside.get(vehicle))){
+						normal.setAmb(true);
+					}
+					System.out.println(vehicle.getName() + " is in " + tunnel.getName());
+					return false;
+				}
+			}
+		}else{
+			for (Tunnel tunnel : tunnels) {
+				if (tunnel.tryToEnter(vehicle) && !hasAmb.contains(tunnel)) {
+					inside.put(vehicle, tunnel);
+					vehicle.addTunnel(tunnel);
+					matches.get(tunnel).add(vehicle);
+					System.out.println(vehicle.getName() + " is in " + tunnel.getName());
+					return false;
+				}
 			}
 		}
 		return true;
@@ -65,11 +80,18 @@ public class PreemptivePriorityScheduler extends Tunnel {
 	public void exitTunnelInner(Vehicle vehicle) {
 		lock.lock();
 		try {
-			inside.remove(vehicle).exitTunnel(vehicle);
+			inside.get(vehicle).exitTunnel(vehicle);
 			System.out.println(vehicle.getName() + " was removed");
 			if (vehicle instanceof Ambulance) {
-				amb = false;
-				thereIsAnAmbulance.signalAll();
+				for(Vehicle normal: matches.get(inside.get(vehicle))){
+					normal.setAmb(false);
+				}
+				hasAmb.remove(inside.remove(vehicle));
+				vehicle.signalAll(); // Made a signalAll method in Vehicle to try and signal from outside the class
+				isTopPriority.signalAll();
+			}else{
+				matches.get(inside.get(vehicle)).remove(vehicle);
+				inside.remove(vehicle);
 			}
 		} finally {
 			lock.unlock();
