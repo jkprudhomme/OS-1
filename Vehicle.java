@@ -192,11 +192,11 @@ public abstract class Vehicle implements Runnable {
 			} else {
 				while (!done) {
 					if (amb) {
-						System.out.println(this.getName()+" waiting for ambulance");
+						System.out.println(this+" waiting for ambulance");
 						thereIsAnAmb.await();
-						startTime = System.currentTimeMillis();
 					} else if (signalTime < waitTime) {
-						System.out.println(this.getName()+" driving in Tunnel");
+						System.out.println(this+" driving in Tunnel");
+						startTime = System.currentTimeMillis();
 						waitYourTime.await(waitTime - signalTime, TimeUnit.MILLISECONDS);
 						signalTime = System.currentTimeMillis() - startTime;
 					} else {
