@@ -52,13 +52,12 @@ public class PreemptivePriorityScheduler extends Tunnel {
 	private boolean tunnelsfull(Vehicle vehicle) {
 		if(vehicle instanceof Ambulance){
 			for (Tunnel tunnel : tunnels) {
-				if (!hasAmb.contains(tunnel)) {
+				if (tunnel.tryToEnter(vehicle) && !hasAmb.contains(tunnel)) {
 					hasAmb.add(tunnel);
 					inside.put(vehicle, tunnel);
-					for(Vehicle normal: matches.get(inside.get(vehicle))){
+					for(Vehicle normal: matches.get(tunnel)){
 						normal.setAmb(true);
 					}
-					System.out.println(vehicle.getName() + " is in " + tunnel.getName());
 					return false;
 				}
 			}
@@ -68,7 +67,6 @@ public class PreemptivePriorityScheduler extends Tunnel {
 					inside.put(vehicle, tunnel);
 					vehicle.addTunnel(tunnel);
 					matches.get(tunnel).add(vehicle);
-					System.out.println(vehicle.getName() + " is in " + tunnel.getName());
 					return false;
 				}
 			}
@@ -80,17 +78,17 @@ public class PreemptivePriorityScheduler extends Tunnel {
 	public void exitTunnelInner(Vehicle vehicle) {
 		lock.lock();
 		try {
-			inside.get(vehicle).exitTunnel(vehicle);
-			System.out.println(vehicle.getName() + " was removed");
+			Tunnel tunnel = inside.get(vehicle);
+			tunnel.exitTunnel(vehicle);
 			if (vehicle instanceof Ambulance) {
-				for(Vehicle normal: matches.get(inside.get(vehicle))){
+				for(Vehicle normal: matches.get(tunnel)){
 					normal.setAmb(false);
 				}
-				hasAmb.remove(inside.remove(vehicle));
-				vehicle.signalAll(); // Made a signalAll method in Vehicle to try and signal from outside the class
+				hasAmb.remove(tunnel);
+//				vehicle.signalAll(); // Made a signalAll method in Vehicle to try and signal from outside the class
 				isTopPriority.signalAll();
 			}else{
-				matches.get(inside.get(vehicle)).remove(vehicle);
+				matches.get(tunnel).remove(vehicle);
 				inside.remove(vehicle);
 			}
 		} finally {
