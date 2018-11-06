@@ -31,6 +31,7 @@ public abstract class Vehicle implements Runnable {
 	private Collection<Tunnel> tunnels;
 	private int priority;
 	private int speed;
+	private Boolean amb;
 	private Log log;
 	protected final Lock lock = new ReentrantLock();
 	protected final Condition waitYourTime = lock.newCondition();
@@ -48,6 +49,7 @@ public abstract class Vehicle implements Runnable {
 		this.speed = getDefaultSpeed();
 		this.log = log;
 		this.tunnels = new ArrayList<Tunnel>();
+		this.amb = false;
 
 		if (this.speed < 0 || this.speed > 9) {
 			throw new RuntimeException("Vehicle has invalid speed");
@@ -176,32 +178,32 @@ public abstract class Vehicle implements Runnable {
 	 * will take.
 	 */
 	public final void doWhileInTunnel() { //this looks very problamatic lol
-		boolean amb = false; //is this gonna be shared this way?
+//		boolean amb = false; //is this gonna be shared this way?
 		lock.lock();
 		long waitTime = ((10 - speed) * 100);
 		long count = TimeUnit.MILLISECONDS.toMillis(0);
 		try {
 			if (this instanceof Ambulance) {
-				amb = true; 
 				waitYourTime.signalAll(); //stop threads from running their own time and start their indefinite wait
 				Thread.sleep(waitTime);
-				amb = false; 
-				thereIsAnAmb.signalAll(); //continue running their own time
+//				thereIsAnAmb.signalAll(); //continue running their own time
 			} 
 			else {
-				while (!amb && count < waitTime) {
-					waitYourTime.await(1, TimeUnit.MILLISECONDS);
-					count++;
-				}
-				while (amb) {
-					System.out.println("waiting for ambulance");
-					thereIsAnAmb.await();
-				}
-				while (count < waitTime) {
-					waitYourTime.await(1, TimeUnit.MILLISECONDS);
-					count++;
+				while(count < waitTime){
+					if(amb){
+						System.out.println("waiting for ambulance");
+						thereIsAnAmb.await();
+					}else{
+						System.out.println("driving in Tunnel");
+						waitYourTime.await(1, TimeUnit.MILLISECONDS);
+						count++;
+					}
 				}
 			}
+//			waitYourTime.signalAll(); //stop threads from running their own time and start their indefinite wait
+//			Current issue is we need change all instances of amb to be false and then signal all vehicles to start moving again
+//			BUT, those occur in different classes
+
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -242,5 +244,22 @@ public abstract class Vehicle implements Runnable {
 			return false;
 		}
 		return true;
+	}
+	
+	public void setAmb(Boolean amb){
+		this.amb = amb;
+	}
+	
+	public Boolean getAmb(){
+		return amb;
+	}
+	
+	public void signalAll(){
+		lock.lock();
+		thereIsAnAmb.signalAll();
+		lock.unlock();
+	}
+	public void setTunnel(){
+		
 	}
 }
