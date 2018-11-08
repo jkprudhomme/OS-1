@@ -195,10 +195,11 @@ public abstract class Vehicle implements Runnable {
 						thereIsAnAmb.await();
 					} else if (signalTime < waitTime) {
 //						System.out.println(this+" driving in Tunnel");
-						startTime = System.currentTimeMillis();
+						
 						System.err.println(waitTime);
 						waitTime -= signalTime;
 //						System.err.println(waitTime);
+						startTime = System.currentTimeMillis();
 						waitYourTime.await(waitTime, TimeUnit.MILLISECONDS);
 						signalTime = System.currentTimeMillis() - startTime;
 					} else {
@@ -267,6 +268,12 @@ public abstract class Vehicle implements Runnable {
 		thereIsAnAmb.signalAll();
 		lock.unlock();
 	}
+	public void signalAllWait() {
+		lock.lock();
+		waitYourTime.signalAll();
+		lock.unlock();
+	}
+
 
 	public void setTunnel() {
 
