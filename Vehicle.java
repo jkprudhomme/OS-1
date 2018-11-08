@@ -1,5 +1,4 @@
 package cs131.pa2.Abstract;
-
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
@@ -192,12 +191,15 @@ public abstract class Vehicle implements Runnable {
 			} else {
 				while (!done) {
 					if (amb) {
-						System.out.println(this+" waiting for ambulance");
+//						System.out.println(this+" waiting for ambulance");
 						thereIsAnAmb.await();
 					} else if (signalTime < waitTime) {
-						System.out.println(this+" driving in Tunnel");
+//						System.out.println(this+" driving in Tunnel");
 						startTime = System.currentTimeMillis();
-						waitYourTime.await(waitTime - signalTime, TimeUnit.MILLISECONDS);
+						System.err.println(waitTime);
+						waitTime -= signalTime;
+//						System.err.println(waitTime);
+						waitYourTime.await(waitTime, TimeUnit.MILLISECONDS);
 						signalTime = System.currentTimeMillis() - startTime;
 					} else {
 						done = true;
@@ -262,7 +264,7 @@ public abstract class Vehicle implements Runnable {
 
 	public void signalAll() {
 		lock.lock();
-		thereIsAnAmb.signal();
+		thereIsAnAmb.signalAll();
 		lock.unlock();
 	}
 
