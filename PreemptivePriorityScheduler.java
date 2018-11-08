@@ -80,16 +80,20 @@ public class PreemptivePriorityScheduler extends Tunnel {
 		try {
 			Tunnel tunnel = inside.get(vehicle);
 			tunnel.exitTunnel(vehicle);
+//			System.out.println(vehicle+" was removed");
 			if (vehicle instanceof Ambulance) {
 				for(Vehicle normal: matches.get(tunnel)){
 					normal.setAmb(false);
+					normal.signalAll();
 				}
 				hasAmb.remove(tunnel);
 //				vehicle.signalAll(); // Made a signalAll method in Vehicle to try and signal from outside the class
 				isTopPriority.signalAll();
 			}else{
-				matches.get(tunnel).remove(vehicle);
-				inside.remove(vehicle);
+				if(!hasAmb.contains(inside.get(vehicle))) {
+					matches.get(tunnel).remove(vehicle);
+					inside.remove(vehicle);
+				}
 			}
 		} finally {
 			lock.unlock();
